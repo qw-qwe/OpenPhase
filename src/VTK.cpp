@@ -79,6 +79,53 @@ void VTK::Write(
     const int precision,
     const int resolution)
 {
+	const long int Nx = get_Nx(resolution, locSettings);
+    const long int Ny = get_Ny(resolution, locSettings);
+    const long int Nz = get_Nz(resolution, locSettings);
+
+#ifndef MPI_PARALLEL
+    ofstream vtk_file(Filename.c_str());
+    VTK::WriteHeader(vtk_file, Nx, Ny, Nz);
+    {
+        WritePointData(vtk_file,ListOfFields,Nx,Ny,Nz,precision);
+    }
+    VTK::WriteEndPointData(vtk_file);
+    VTK::WriteCoordinates(vtk_file, locSettings, resolution);
+    VTK::CloseFile(vtk_file);
+#else
+    std::stringstream buffer;
+    std::stringstream hbuffer;
+    std::stringstream tbuffer;
+
+    const long int TotalNx = get_TotalNx(resolution, locSettings);
+    const long int TotalNy = get_TotalNy(resolution, locSettings);
+    const long int TotalNz = get_TotalNz(resolution, locSettings);
+    const long int OffsetX = get_OffsetX(resolution, locSettings);
+    const long int OffsetY = get_OffsetY(resolution, locSettings);
+    const long int OffsetZ = get_OffsetZ(resolution, locSettings);
+
+    buffer << "<Piece Extent=\""
+           << OffsetX << " " << Nx-1 + OffsetX << " "
+           << OffsetY << " " << Ny-1 + OffsetY << " "
+           << OffsetZ << " " << Nz-1 + OffsetZ << "\">\n";
+    {
+        WritePointData(buffer,ListOfFields,Nx,Ny,Nz,precision);
+    }
+    VTK::WriteEndPointData(buffer);
+    VTK::WriteCoordinates(buffer, locSettings, resolution);
+    buffer << "</Piece>\n";
+
+    hbuffer << "<?xml version= \"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
+    hbuffer << "<VTKFile type=\"StructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
+    hbuffer << "<StructuredGrid WholeExtent=\""
+            << 0 << " " << TotalNx-1 << " "
+            << 0 << " " << TotalNy-1 << " "
+            << 0 << " " << TotalNz-1 << "\"> \n";
+    tbuffer << "</StructuredGrid> \n";
+    tbuffer << "</VTKFile> \n";
+
+    op_mpi_write_vtk(Filename, buffer, hbuffer, tbuffer);
+#endif
 }
 
 void VTK::WriteCompressed(
@@ -144,6 +191,53 @@ void VTK::WriteDistorted(
     const int precision,
     const int resolution)
 {
+    const long int Nx = get_Nx(resolution, locSettings);
+    const long int Ny = get_Ny(resolution, locSettings);
+    const long int Nz = get_Nz(resolution, locSettings);
+
+#ifndef MPI_PARALLEL
+    ofstream vtk_file(Filename.c_str());
+    VTK::WriteHeader(vtk_file, Nx, Ny, Nz);
+    {
+        WritePointData(vtk_file,ListOfFields,Nx,Ny,Nz,precision);
+    }
+    VTK::WriteEndPointData(vtk_file);
+    VTK::WriteCoordinatesDistorted(vtk_file,EP,locSettings,resolution);
+    VTK::CloseFile(vtk_file);
+#else
+    std::stringstream buffer;
+    std::stringstream hbuffer;
+    std::stringstream tbuffer;
+
+    const long int TotalNx = get_TotalNx(resolution, locSettings);
+    const long int TotalNy = get_TotalNy(resolution, locSettings);
+    const long int TotalNz = get_TotalNz(resolution, locSettings);
+    const long int OffsetX = get_OffsetX(resolution, locSettings);
+    const long int OffsetY = get_OffsetY(resolution, locSettings);
+    const long int OffsetZ = get_OffsetZ(resolution, locSettings);
+
+    buffer << "<Piece Extent=\""
+           << OffsetX << " " << Nx-1 + OffsetX << " "
+           << OffsetY << " " << Ny-1 + OffsetY << " "
+           << OffsetZ << " " << Nz-1 + OffsetZ << "\">\n";
+    {
+        WritePointData(buffer,ListOfFields,Nx,Ny,Nz,precision);
+    }
+    VTK::WriteEndPointData(buffer);
+    VTK::WriteCoordinatesDistorted(buffer,EP,locSettings,resolution);
+    buffer << "</Piece>\n";
+
+    hbuffer << "<?xml version= \"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
+    hbuffer << "<VTKFile type=\"StructuredGrid\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
+    hbuffer << "<StructuredGrid WholeExtent=\""
+            << 0 << " " << TotalNx-1 << " "
+            << 0 << " " << TotalNy-1 << " "
+            << 0 << " " << TotalNz-1 << "\"> \n";
+    tbuffer << "</StructuredGrid> \n";
+    tbuffer << "</VTKFile> \n";
+
+    op_mpi_write_vtk(Filename, buffer, hbuffer, tbuffer);
+#endif
 }
 
 void VTK::WriteDistortedCompressed(
