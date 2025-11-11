@@ -68,6 +68,9 @@ $Mu_1_1             Interface mobility                  : 1.0e-10
 
 @Nucleation
 
+$Allowed_0_0   allows to nucleate phase 0 in itself     : No
+$Allowed_0_1   allows to nucleate phase 0 in phase 1    : No
+$Allowed_1_1   allows to nucleate phase 1 in itself     : No
 $Allowed_1_0        Allow nucleation of phase 1 in phase 0              : Yes
 $Density_1_0        Particle Density of phase 1 in phase 0 (in 1/m^3)   : 2.0e+10
 $Distribution_1_0   Nuclei size distribution                            : Normal
